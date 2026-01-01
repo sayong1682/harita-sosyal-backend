@@ -1,20 +1,22 @@
 const express = require("express");
-const cors = require("cors");
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
-
-app.post("/api/login", async (req, res) => {
-  const { username, password } = req.body;
-
-  if (username === "sayong" && password === "4528192yusuf") {
-    res.json({ message: "Giriş başarılı!" });
-  } else {
-    res.status(401).json({ message: "Geçersiz kullanıcı adı veya şifre" });
-  }
+// Ana route (test için)
+app.get("/", (req, res) => {
+  res.send("Backend çalışıyor 🚀");
 });
 
-app.listen(3000, () => {
-  console.log("Sunucu çalışıyor");
+// Route dosyalarını import et
+const authRoutes = require("./routes/auth");
+const eventRoutes = require("./routes/events");
+const messageRoutes = require("./routes/messages");
+
+// Route'ları kullan
+app.use("/auth", authRoutes);
+app.use("/events", eventRoutes);
+app.use("/messages", messageRoutes);
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
