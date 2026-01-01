@@ -26,3 +26,35 @@ router.get("/:id", (req, res) => {
 
 // ✅ Yeni event ekle (/events)
 router.post("/", (req, res) => {
+  const newEvent = {
+    id: events.length + 1,
+    title: req.body.title,
+    location: req.body.location,
+    date: req.body.date
+  };
+  events.push(newEvent);
+  res.status(201).json(newEvent);
+});
+
+// ✅ Event güncelle (/events/:id)
+router.put("/:id", (req, res) => {
+  const event = events.find(e => e.id === parseInt(req.params.id));
+  if (!event) return res.status(404).send("Event bulunamadı");
+
+  event.title = req.body.title || event.title;
+  event.location = req.body.location || event.location;
+  event.date = req.body.date || event.date;
+
+  res.json(event);
+});
+
+// ✅ Event sil (/events/:id)
+router.delete("/:id", (req, res) => {
+  const eventIndex = events.findIndex(e => e.id === parseInt(req.params.id));
+  if (eventIndex === -1) return res.status(404).send("Event bulunamadı");
+
+  const deleted = events.splice(eventIndex, 1);
+  res.json(deleted);
+});
+
+module.exports = router;

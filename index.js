@@ -2,9 +2,12 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Ana route (test için)
+// Body parser (POST/PUT için gerekli)
+app.use(express.json());
+
+// Ana route
 app.get("/", (req, res) => {
-  res.send("Backend çalışıyor 🚀");
+  res.send("Enment Backend Çalışıyor!");
 });
 
 // Route dosyalarını import et
