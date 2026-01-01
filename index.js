@@ -1,29 +1,20 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
-
-const authRoutes = require('./routes/auth');
-const eventRoutes = require('./routes/events');
-const messageRoutes = require('./routes/messages');
-
+const express = require("express");
+const cors = require("cors");
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-app.use('/auth', authRoutes);
-app.use('/events', eventRoutes);
-app.use('/messages', messageRoutes);
+app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
 
-app.get('/', (req, res) => {
-  res.send('Enment backend çalışıyor 🚀');
+  if (username === "sayong" && password === "1234") {
+    res.json({ message: "Giriş başarılı!" });
+  } else {
+    res.status(401).json({ message: "Geçersiz kullanıcı adı veya şifre" });
+  }
 });
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('MongoDB bağlantısı başarılı');
-    app.listen(process.env.PORT || 3000, () => {
-      console.log('Sunucu çalışıyor...');
-    });
-  })
-  .catch(err => console.error('MongoDB bağlantı hatası:', err));
+app.listen(3000, () => {
+  console.log("Sunucu çalışıyor");
+});
