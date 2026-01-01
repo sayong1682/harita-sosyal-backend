@@ -20,6 +20,7 @@ app.use("/auth", authRoutes);
 app.use("/events", eventRoutes);
 app.use("/messages", messageRoutes);
 
+// Server başlat
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
