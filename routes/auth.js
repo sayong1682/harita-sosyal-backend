@@ -28,11 +28,15 @@ router.post('/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'Şifre yanlış' });
 
+<<<<<<< HEAD
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
+=======
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET);
+>>>>>>> b9be6255f03acae7f08acb321b24a46b3a0639a8
     res.json({ token });
   } catch (err) {
     res.status(500).json({ error: 'Giriş hatası', details: err.message });
@@ -52,6 +56,7 @@ router.post('/follow/:id', async (req, res) => {
       await target.save();
     }
 
+<<<<<<< HEAD
     res.status(200).json({ message: 'Takip başarılı' });
   } catch (err) {
     res.status(500).json({ error: 'Takip hatası', details: err.message });
@@ -59,3 +64,6 @@ router.post('/follow/:id', async (req, res) => {
 });
 
 module.exports = router;
+=======
+    res
+>>>>>>> b9be6255f03acae7f08acb321b24a46b3a0639a8
