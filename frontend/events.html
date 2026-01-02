@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Etkinlikler - Enment</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #6a0dad; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 8px 0; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+    button { margin-left: 5px; }
+    #error { color: red; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Etkinlikler 🎉</h1>
+  <button onclick="logout()">Çıkış Yap</button>
+  <div id="error"></div>
+
+  <!-- Yeni Etkinlik Ekle -->
+  <h2>Yeni Etkinlik Ekle</h2>
+  <form id="addEventForm">
+    <label for="event-title">Başlık:</label>
+    <input type="text" id="event-title" name="title" required>
+    <br>
+    <label for="event-location">Konum:</label>
+    <input type="text" id="event-location" name="location" required>
+    <br>
+    <label for="event-date">Tarih:</label>
+    <input type="date" id="event-date" name="date" required>
+    <br>
+    <button type="submit">Ekle</button>
+  </form>
+
+  <!-- Arama -->
+  <h2>Etkinlik Ara</h2>
+  <form id="searchForm">
+    <input type="text" id="searchTitle" placeholder="Başlık">
+    <input type="text" id="searchLocation" placeholder="Konum">
+    <button type="submit">Ara</button>
+  </form>
+
+  <!-- Tarih Filtreleme -->
+  <h2>Tarih Aralığı Filtrele</h2>
+  <form id="filterForm">
+    <label>Başlangıç:</label>
+    <input type="date" id="startDate">
+    <label>Bitiş:</label>
+    <input type="date" id="endDate">
+    <button type="submit">Filtrele</button>
+  </form>
+
+  <!-- Sayfalama -->
+  <h2>Sayfalama</h2>
+  <button onclick="loadPage(1)">Sayfa 1</button>
+  <button onclick="loadPage(2)">Sayfa 2</button>
+
+  <!-- Sıralama -->
+  <h2>Sıralama</h2>
+  <button onclick="sortEvents('date','asc')">Tarihe Göre Artan</button>
+  <button onclick="sortEvents('date','desc')">Tarihe Göre Azalan</button>
+
+  <!-- Favoriler -->
+  <h2>Favoriler</h2>
+  <button onclick="loadFavorites()">Favorileri Göster</button>
+
+  <!-- Etkinlik Listesi -->
+  <div id="eventsList">
+    <h2>Tüm Etkinlikler</h2>
+    <ul id="eventItems"></ul>
+  </div>
+
+  <script>
+    const BASE_URL = "https://harita-sosyal-backend.onrender.com/api/events";
+
+    function showError(msg) {
+      document.getElementById("error").textContent = msg;
+    }
+
+    // Etkinlikleri listele
+    async function loadEvents() {
+      try {
+        const response = await fetch(BASE_URL + "/all");
+        if (!response.ok) throw new Error("Sunucu hatası: " + response.status);
+        const events = await response.json();
+        renderEvents(events);
+      } catch (error) {
+        showError("Etkinlikler yüklenemedi: " + error.message);
+      }
+    }
+
+    // Listeyi render et
+    function renderEvents(events) {
+      const list = document.getElementById("eventItems");
+      list.innerHTML = "";
+      events.forEach(ev => {
+        const li = document.createElement("li");
+        li.textContent = `${ev.title} - ${ev.date} - ${ev.location}`;
+
+        const favBtn = document.createElement("button");
+        favBtn.textContent = ev.favorite ? "Favoriden Çıkar" : "Favoriye Ekle";
+        favBtn.onclick = () => toggleFavorite(ev.id);
+        li.appendChild(favBtn);
+
+        const updateBtn = document.createElement("button");
+        updateBtn.textContent = "Güncelle";
+        updateBtn.onclick = () => updateEvent(ev.id);
+        li.appendChild(updateBtn);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Sil";
+        deleteBtn.onclick = () => deleteEvent(ev.id);
+        li.appendChild(deleteBtn);
+
+        list.appendChild(li);
+      });
+    }
+
+    async function toggleFavorite(id) {
+      try {
+        const response = await fetch(BASE_URL + "/" + id + "/favorite", { method: "POST" });
+        const result = await response.json();
+        alert(result.message);
+        loadEvents();
+      } catch (error) {
+        showError("Favori işlemi başarısız: " + error.message);
+      }
+    }
+
+    document.getElementById("addEventForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const title = document.getElementById("event-title").value;
+      const location = document.getElementById("event-location").value;
+      const date = document.getElementById("event-date").value;
+
+      try {
+        const response = await fetch(BASE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, location, date })
+        });
+        const newEvent = await response.json();
+        alert("Etkinlik eklendi: " + newEvent.title);
+        loadEvents();
+      } catch (error) {
+        showError("Etkinlik eklenemedi: " + error.message);
+      }
+    });
+
+    async function updateEvent(id) {
+      const newTitle = prompt("Yeni başlık:");
+      const newLocation = prompt("Yeni konum:");
+      const newDate = prompt("Yeni tarih (YYYY-MM-DD):");
+
+      try {
+        const response = await fetch(BASE_URL + "/" + id, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: newTitle, location: newLocation, date: newDate })
+        });
+        const updated = await response.json();
+        alert("Etkinlik güncellendi: " + updated.title);
+        loadEvents();
+      } catch (error) {
+        showError("Güncelleme hatası: " + error.message);
+      }
+    }
+
+    async function deleteEvent(id) {
+      if (!confirm("Bu etkinliği silmek istediğine emin misin?")) return;
+      try {
+        const response = await fetch(BASE_URL + "/" + id, { method: "DELETE" });
+        const deleted = await response.json();
+        alert("Etkinlik silindi: " + deleted[0].title);
+        loadEvents();
+      } catch (error) {
+        showError("Silme hatası: " + error.message);
+      }
+    }
+
+    document.getElementById("searchForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const title = document.getElementById("searchTitle").value;
+      const location = document.getElementById("searchLocation").value;
+      try {
+        const response = await fetch(`${BASE_URL}/search?title=${title}&location=${location}`);
+        const events = await response.json();
+        renderEvents(events);
+      } catch (error) {
+        showError("Arama hatası: " + error.message);
+      }
+    });
+
+    document.getElementById("filterForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+      try {
+        const response = await fetch(`${BASE_URL}/filter?start=${start}&end=${end}`);
+        const events = await response.json();
+        renderEvents(events);
+      } catch (error) {
+        showError("Filtreleme hatası: " + error.message);
+      }
+    });
+
+    async function loadPage(page) {
+      try {
+        const response = await fetch(`${BASE_URL}/page?page=${page}&limit=2`);
+        const result = await response.json();
+        renderEvents(result.data);
+      } catch (error) {
+        showError("Sayfalama hatası: " + error.message);
+      }
+    }
+
+        async function sortEvents(by, order) {
+      try {
+        const response = await fetch(`${BASE_URL}/sort?by=${by}&order=${order}`);
+        const events = await response.json();
+        renderEvents(events);
+      } catch (error) {
+        showError("Sıralama hatası: " + error.message);
+      }
+    }
+
+    // Favoriler
+    async function loadFavorites() {
+      try {
+        const response = await fetch(BASE_URL + "/favorites");
+        const events = await response.json();
+        renderEvents(events);
+      } catch (error) {
+        showError("Favoriler yüklenemedi: " + error.message);
+      }
+    }
+
+    // Çıkış
+    function logout() {
+      localStorage.removeItem("token"); // backend ile uyumlu anahtar
+      alert("Çıkış yapıldı!");
+      window.location.href = "/index.html";
+    }
+
+    // Sayfa açıldığında etkinlikleri yükle
+    loadEvents();
+
+    // Share Target verisini yakala (title/text/url)
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const sharedTitle = params.get("title");
+      const sharedText = params.get("text");
+      const sharedUrl = params.get("url");
+
+      if (sharedTitle || sharedText || sharedUrl) {
+        console.log("Paylaşılan veri:", { sharedTitle, sharedText, sharedUrl });
+        showError("Paylaşılan içerik alındı: " + (sharedTitle || sharedText || sharedUrl));
+        // İstersen burada otomatik yeni etkinlik ekleme mantığı kurabilirsin
+      }
+    });
+  </script>
+</body>
+</html>
